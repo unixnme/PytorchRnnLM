@@ -20,7 +20,7 @@ SENT_END = "<sentence_end>"
 def path(part):
     """ Gets the dataset for 'part' being train|test|valid. """
     assert part in ("train", "test", "valid")
-    return os.path.join("wikitext-2", "wiki." + part + ".tokens")
+    return os.path.join("/home/linuxnme/Data/corpus", "tiny_corpus_" + part + ".txt")
 
 
 def load(path, index):

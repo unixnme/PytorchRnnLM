@@ -111,20 +111,21 @@ def evaluate(data, model, batch_size, device):
     return 2 ** (entropy_sum / word_count)
 
 
-def generate(model:nn.Module, bos:int, eos:int, limit:int=100):
-    x = torch.LongTensor([[bos]])
+def generate(model:nn.Module, bos:int, eos:int, device, limit:int=100):
+    idx = bos
     hid = None
     sentence = []
     with torch.no_grad():
         for _ in range(limit):
+            x = torch.LongTensor([idx]).to(device.type)
             x = model.get_embedded(x)
             out, hid = model.gru(x.view(1,1,-1), hid)
             out = model.fc1(out.view(1,-1))
             prob = torch.softmax(out, -1)
-            idx = prob.multinomial(1)
-            if idx.item() == eos:
+            idx = prob.multinomial(1).item()
+            if idx == eos:
                 break
-            sentence.append(idx.item())
+            sentence.append(idx)
     return sentence
 
 
@@ -176,11 +177,12 @@ def main(args=sys.argv[1:]):
         train_epoch(train_data, model, optimizer, args, device)
         logging.info("Validation perplexity: %.1f",
                      evaluate(valid_data, model, args.batch_size, device))
-        logging.info("Generated sentence: ",
-                     ' '.join([vocab._ind_to_tok[i] for i in generate(model,
+        words = [vocab._ind_to_tok[i] for i in generate(model,
                                                                       vocab._tok_to_ind[data_loader.SENT_START],
                                                                       vocab._tok_to_ind[data_loader.SENT_END],
-                                                                      )]))
+                                                                      device
+                                                                      )]
+        print(' '.join(words))
     logging.info("Test perplexity: %.1f",
                  evaluate(test_data, model, args.batch_size, device))
 
