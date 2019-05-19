@@ -134,6 +134,7 @@ def parse_args(args):
     argp.add_argument("--logging", choices=["INFO", "DEBUG"],
                       default="INFO")
 
+    argp.add_argument("--data", type=str, required=True)
     argp.add_argument("--embedding-dim", type=int, default=512,
                       help="Word embedding dimensionality")
     argp.add_argument("--untied", action="store_true",
@@ -163,9 +164,7 @@ def main(args=sys.argv[1:]):
 
     vocab = Vocab()
     # Load data now to know the whole vocabulary when training model.
-    train_data = data_loader.load(data_loader.path("train"), vocab)
-    valid_data = data_loader.load(data_loader.path("valid"), vocab)
-    test_data = data_loader.load(data_loader.path("test"), vocab)
+    train_data = data_loader.load(args.data, vocab)
 
     model = RnnLm(len(vocab), args.embedding_dim,
                   args.gru_hidden, args.gru_layers,
@@ -175,16 +174,14 @@ def main(args=sys.argv[1:]):
     for epoch_ind in range(args.epochs):
         logging.info("Training epoch %d", epoch_ind)
         train_epoch(train_data, model, optimizer, args, device)
-        logging.info("Validation perplexity: %.1f",
-                     evaluate(valid_data, model, args.batch_size, device))
         words = [vocab._ind_to_tok[i] for i in generate(model,
                                                                       vocab._tok_to_ind[data_loader.SENT_START],
                                                                       vocab._tok_to_ind[data_loader.SENT_END],
                                                                       device
                                                                       )]
         print(' '.join(words))
-    logging.info("Test perplexity: %.1f",
-                 evaluate(test_data, model, args.batch_size, device))
+        sys.stdout.flush()
+    torch.save(model, 'model.pt')
 
 
 if __name__ == '__main__':
