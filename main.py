@@ -13,6 +13,7 @@ import logging
 import math
 import random
 import sys
+import pickle
 
 import torch
 import torch.nn as nn
@@ -150,6 +151,7 @@ def parse_args(args):
     argp.add_argument("--batch-size", type=int, default=128)
     argp.add_argument("--lr", type=float, default=0.001,
                       help="Learning rate")
+    argp.add_argument("--vocab", type=str)
 
     argp.add_argument("--no-cuda", action="store_true")
     return argp.parse_args(args)
@@ -165,6 +167,9 @@ def main(args=sys.argv[1:]):
     vocab = Vocab()
     # Load data now to know the whole vocabulary when training model.
     train_data = data_loader.load(args.data, vocab)
+    if args.vocab is not None:
+        with open(args.vocab, 'wb') as f:
+            pickle.dump(vocab, f)
 
     model = RnnLm(len(vocab), args.embedding_dim,
                   args.gru_hidden, args.gru_layers,
