@@ -20,7 +20,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 import data_loader
-from vocab import Vocab
 from log_timer import LogTimer
 
 
@@ -161,11 +160,8 @@ def main(args=sys.argv[1:]):
     device = torch.device("cpu" if args.no_cuda or not torch.cuda.is_available()
                           else "cuda")
 
-    vocab = Vocab()
     # Load data now to know the whole vocabulary when training model.
-    train_data = data_loader.load(data_loader.path("train"), vocab)
-    valid_data = data_loader.load(data_loader.path("valid"), vocab)
-    test_data = data_loader.load(data_loader.path("test"), vocab)
+    vocab, train_data = data_loader.load(data_loader.path("train"))
 
     model = RnnLm(len(vocab), args.embedding_dim,
                   args.gru_hidden, args.gru_layers,
@@ -175,16 +171,12 @@ def main(args=sys.argv[1:]):
     for epoch_ind in range(args.epochs):
         logging.info("Training epoch %d", epoch_ind)
         train_epoch(train_data, model, optimizer, args, device)
-        logging.info("Validation perplexity: %.1f",
-                     evaluate(valid_data, model, args.batch_size, device))
         words = [vocab._ind_to_tok[i] for i in generate(model,
                                                                       vocab._tok_to_ind[data_loader.SENT_START],
                                                                       vocab._tok_to_ind[data_loader.SENT_END],
                                                                       device
                                                                       )]
         print(' '.join(words))
-    logging.info("Test perplexity: %.1f",
-                 evaluate(test_data, model, args.batch_size, device))
 
 
 if __name__ == '__main__':

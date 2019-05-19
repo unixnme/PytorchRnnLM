@@ -11,38 +11,42 @@ the ending period. Add sentence start/end tokens.
 """
 
 import os
-
+from multiprocessing import Pool
 from vocab import Vocab
 
-SENT_START = "<sentence_start>"
-SENT_END = "<sentence_end>"
+SENT_START = "<s>"
+SENT_END = "</s>"
 
 def path(part):
     """ Gets the dataset for 'part' being train|test|valid. """
     assert part in ("train", "test", "valid")
-    return os.path.join("/home/linuxnme/Data/corpus", "tiny_corpus_" + part + ".txt")
+    return os.path.join("/home/ykang7/Data/corpus", "tiny_corpus" + ".txt")
 
 
-def load(path, index):
+class F(object):
+    def __init__(self, vocab:list):
+        self.vocab = vocab
+
+    def __call__(self, line:str):
+        new_line = [SENT_START] + line.split() + [SENT_END]
+        return [self.vocab.index(w) for w in new_line]
+
+
+def load(path):
     """ Loads the wikitext2 data at the given path using
     the given index (maps tokens to indices). Returns
     a list of sentences where each is a list of token
     indices.
     """
-    start = index.add(SENT_START)
-    sentences = []
-    with open(path, "r") as f:
-        for paragraph in f:
-            for sentence in paragraph.split(" . "):
-                tokens = sentence.split()
-                if not tokens:
-                    continue
-                sentence = [index.add(SENT_START)]
-                sentence.extend(index.add(t.lower()) for t in tokens)
-                sentence.append(index.add(SENT_END))
-                sentences.append(sentence)
+    with open(path, 'r') as f:
+        lines = f.readlines()
+    vocab = set(''.join(lines).split()).union({SENT_START, SENT_END})
+    vocab = list(sorted(vocab))
+    f = F(vocab)
+    with Pool(4) as p:
+        sentences = p.map(f, lines)
 
-    return sentences
+    return Vocab(vocab), sentences
 
 
 def main():

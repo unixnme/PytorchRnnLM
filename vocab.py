@@ -5,11 +5,10 @@
 class Vocab(object):
     """ Converts word tokens to indices, and vice versa. """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, vocab:list):
 
-        self._tok_to_ind = {}
-        self._ind_to_tok = []
+        self._ind_to_tok = vocab
+        self._tok_to_ind = dict(enumerate(vocab))
         self._counts = []
 
     def count(self, word):
