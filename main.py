@@ -133,6 +133,7 @@ def parse_args(args):
     argp.add_argument("--logging", choices=["INFO", "DEBUG"],
                       default="INFO")
 
+    argp.add_argument("--data", type=str)
     argp.add_argument("--embedding-dim", type=int, default=512,
                       help="Word embedding dimensionality")
     argp.add_argument("--untied", action="store_true",
@@ -161,7 +162,7 @@ def main(args=sys.argv[1:]):
                           else "cuda")
 
     # Load data now to know the whole vocabulary when training model.
-    vocab, train_data = data_loader.load(data_loader.path("train"))
+    vocab, train_data = data_loader.load(args.data)
 
     model = RnnLm(len(vocab), args.embedding_dim,
                   args.gru_hidden, args.gru_layers,
