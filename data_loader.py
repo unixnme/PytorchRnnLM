@@ -38,7 +38,7 @@ def load(path, index):
                 if not tokens:
                     continue
                 sentence = [index.add(SENT_START)]
-                sentence.extend(index.add(t.lower()) for t in tokens)
+                sentence.extend(index.add(t.upper()) for t in tokens)
                 sentence.append(index.add(SENT_END))
                 sentences.append(sentence)
 

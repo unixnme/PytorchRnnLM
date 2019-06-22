@@ -189,7 +189,7 @@ def main(args=sys.argv[1:]):
                                                           )]
         ppl = lm.perplexity(' '.join(words).upper())
         print(' '.join(words))
-        print("Perplexicity: %f" % ppl)
+        print("Perplexicity: %f\n" % ppl)
         sys.stdout.flush()
     torch.save(model, 'model.pt')
 
