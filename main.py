@@ -19,6 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from kenlm import LanguageModel
 
 import data_loader
 from vocab import Vocab
@@ -152,6 +153,7 @@ def parse_args(args):
     argp.add_argument("--lr", type=float, default=0.001,
                       help="Learning rate")
     argp.add_argument("--vocab", type=str)
+    argp.add_argument("--arpa", type=str, required=True)
 
     argp.add_argument("--no-cuda", action="store_true")
     return argp.parse_args(args)
@@ -175,16 +177,19 @@ def main(args=sys.argv[1:]):
                   args.gru_hidden, args.gru_layers,
                   not args.untied, args.gru_dropout).to(device)
     optimizer = optim.RMSprop(model.parameters(), lr=args.lr)
+    lm = LanguageModel(args.arpa)
 
     for epoch_ind in range(args.epochs):
         logging.info("Training epoch %d", epoch_ind)
         train_epoch(train_data, model, optimizer, args, device)
         words = [vocab._ind_to_tok[i] for i in generate(model,
-                                                                      vocab._tok_to_ind[data_loader.SENT_START],
-                                                                      vocab._tok_to_ind[data_loader.SENT_END],
-                                                                      device
-                                                                      )]
+                                                          vocab._tok_to_ind[data_loader.SENT_START],
+                                                          vocab._tok_to_ind[data_loader.SENT_END],
+                                                          device
+                                                          )]
+        ppl = lm.perplexity(' '.join(words).upper())
         print(' '.join(words))
+        print("Perplexicity: %f" % ppl)
         sys.stdout.flush()
     torch.save(model, 'model.pt')
 
