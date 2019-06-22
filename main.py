@@ -136,24 +136,24 @@ def parse_args(args):
     argp.add_argument("--logging", choices=["INFO", "DEBUG"],
                       default="INFO")
 
-    argp.add_argument("--data", type=str, required=True)
-    argp.add_argument("--embedding-dim", type=int, default=512,
+    argp.add_argument("--data", type=str, default='../lm/tiny_corpus.txt')
+    argp.add_argument("--embedding-dim", type=int, default=128,
                       help="Word embedding dimensionality")
-    argp.add_argument("--untied", action="store_true",
+    argp.add_argument("--tied", action="store_true",
                       help="Use untied input/output embedding weights")
-    argp.add_argument("--gru-hidden", type=int, default=512,
+    argp.add_argument("--gru-hidden", type=int, default=128,
                       help="GRU gidden unit dimensionality")
     argp.add_argument("--gru-layers", type=int, default=1,
                       help="Number of GRU layers")
     argp.add_argument("--gru-dropout", type=float, default=0.0,
                       help="The amount of dropout in GRU layers")
 
-    argp.add_argument("--epochs", type=int, default=4)
+    argp.add_argument("--epochs", type=int, default=100)
     argp.add_argument("--batch-size", type=int, default=128)
     argp.add_argument("--lr", type=float, default=0.001,
                       help="Learning rate")
     argp.add_argument("--vocab", type=str)
-    argp.add_argument("--arpa", type=str, required=True)
+    argp.add_argument("--arpa", type=str, default='../lm/tiny_corpus.arpa')
 
     argp.add_argument("--no-cuda", action="store_true")
     return argp.parse_args(args)
@@ -175,7 +175,7 @@ def main(args=sys.argv[1:]):
 
     model = RnnLm(len(vocab), args.embedding_dim,
                   args.gru_hidden, args.gru_layers,
-                  not args.untied, args.gru_dropout).to(device)
+                  args.tied, args.gru_dropout).to(device)
     optimizer = optim.RMSprop(model.parameters(), lr=args.lr)
     lm = LanguageModel(args.arpa)
 
